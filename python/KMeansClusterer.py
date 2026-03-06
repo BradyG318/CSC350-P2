@@ -139,33 +139,58 @@ class KMeansClusterer:
         return sqrt(sumOfSquareDiffs)
 
     def getWCSS(self):
-        """Return the minimum Within-Clusters Sum-of-Squares measure for the chosen k number of clusters.
-
-        Returns: the minimum Within-Clusters Sum-of-Squares measure (float)
-        """
-        # TODO
-        pass
+        wcss = 0.0
+        for i in range(len(self.data)):
+            dist = self.getDistance(self.data[i], self.centroids[self.clusters[i]])
+            wcss += dist * dist
+        return wcss
 
     def assignNewClusters(self) -> bool:
-        """Assign each data point to the nearest centroid and return whether or not any cluster assignments changed.
-
-        Returns: Whether or not any cluster assignments changed (bool)
-        """
-        # TODO
-        pass
+       changed = False
+        for i in range(len(self.data)):
+            minDist = float('inf')
+            minCluster = 0
+            for c in range(self.k):
+                dist = self.getDistance(self.data[i], self.centroids[c])
+                if dist < minDist:
+                    minDist = dist
+                    minCluster = c
+            if self.clusters[i] != minCluster:
+                self.clusters[i] = minCluster
+                changed = True
+        return changed
 
     def computeNewCentroids(self):
-        """Compute new centroids at the mean point of each cluster of points."""
-        # TODO
-        pass
+        self.centroids = [[0.0] * self.dim for _ in range(self.k)]
+        counts = [0] * self.k
+        for i in range(len(self.data)):
+            c = self.clusters[i]
+            counts[c] += 1
+            for j in range(self.dim):
+                self.centroids[c][j] += self.data[i][j]
+        for c in range(self.k):
+            if counts[c] > 0:
+                for j in range(self.dim):
+                    self.centroids[c][j] /= counts[c]
+            else:
+                randIdx = random.randint(0, len(self.data) - 1)
+                self.centroids[c] = list(self.data[randIdx])
 
     def kMeansCluster(self):
-        """Perform k-means clustering with Forgy initialization and return the 0-based cluster assignments for corresponding data points.
-        If self.iter > 1, choose the clustering that minimizes the WCSS measure.
-        If kMin < kMax, select the k maximizing the gap statistic using 100 uniform samples uniformly across given data ranges.
-        """
-        # TODO
-        pass
+        n = len(self.data)
+        self.k = self.kMin
+
+        # Forgy initialization: pick k random data points as initial centroids
+        indices = random.sample(range(n), self.k)
+        self.centroids = [list(self.data[idx]) for idx in indices]
+        self.clusters = [0] * n
+
+        # Assign, then loop recompute/reassign until stable
+        self.assignNewClusters()
+        changed = True
+        while changed:
+            self.computeNewCentroids()
+            changed = self.assignNewClusters()
 
     def writeClusterData(self, filename):
         """Export cluster data in the given data output format to the file provided.
