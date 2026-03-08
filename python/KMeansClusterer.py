@@ -146,7 +146,7 @@ class KMeansClusterer:
         return wcss
 
     def assignNewClusters(self) -> bool:
-       changed = False
+        changed = False
         for i in range(len(self.data)):
             minDist = float('inf')
             minCluster = 0
