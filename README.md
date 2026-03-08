@@ -1,3 +1,7 @@
+LINK:
+https://quinnipiacuniversity-my.sharepoint.com/:f:/g/personal/bmgalligan_quinnipiac_edu/IgD6VNO7BE3VQ5YiWRxuocSvAQRnrm4q-MKmy2FnP1qKniY?e=wgAZ3o
+
+
 1a. What are the assumptions that the k-means algorithm makes of the input data?
 The assumptions that the k-means algorithm makes are that the clusters are almost spherical, have similar size/density, each data point belongs to the nearest centroid, and the number of clusters(k) is known. 
 1b. Each input file has the original generating clusters in the filename before the “.dat” extension. For example, bullseye2.dat was generated with 2 clusters. For each input file provided, run k-means 3 times with the k value indicated by the filename. 
