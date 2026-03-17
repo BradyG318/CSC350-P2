@@ -176,21 +176,56 @@ class KMeansClusterer:
                 randIdx = random.randint(0, len(self.data) - 1)
                 self.centroids[c] = list(self.data[randIdx])
 
+    # def kMeansCluster(self):
+    #     n = len(self.data)
+    #     self.k = self.kMin
+
+    #     # Forgy initialization: pick k random data points as initial centroids
+    #     indices = random.sample(range(n), self.k)
+    #     self.centroids = [list(self.data[idx]) for idx in indices]
+    #     self.clusters = [0] * n
+
+    #     # Assign, then loop recompute/reassign until stable
+    #     self.assignNewClusters()
+    #     changed = True
+    #     while changed:
+    #         self.computeNewCentroids()
+    #         changed = self.assignNewClusters()
+
+    # Exercise 2 version (Should be backward compatible but leaving old one cuz paranoia)
     def kMeansCluster(self):
         n = len(self.data)
-        self.k = self.kMin
 
-        # Forgy initialization: pick k random data points as initial centroids
-        indices = random.sample(range(n), self.k)
-        self.centroids = [list(self.data[idx]) for idx in indices]
-        self.clusters = [0] * n
+        bestWCSS = float('inf') #Set to placeholder for positive infinity
+        #Initializing empty
+        bestCentroids = None
+        bestClusters = None
 
-        # Assign, then loop recompute/reassign until stable
-        self.assignNewClusters()
-        changed = True
-        while changed:
-            self.computeNewCentroids()
-            changed = self.assignNewClusters()
+        for _ in range(self.iter):
+
+            #Forgy initialization (copied from previous version)
+            indices = random.sample(range(n), self.k)
+            self.centroids = [list(self.data[idx]) for idx in indices]
+            self.clusters = [0] * n
+
+            #Kmeans loop (Copied from previous version)
+            self.assignNewClusters()
+            changed = True
+            while changed:
+                self.computeNewCentroids()
+                changed = self.assignNewClusters()
+
+            wcss = self.getWCSS()
+
+            if wcss < bestWCSS: #If our current test IS better
+                bestWCSS = wcss #update var to new best
+                bestCentroids = [list(c) for c in self.centroids]
+                bestClusters = list(self.clusters)
+
+        #Update Vars
+        self.centroids = bestCentroids
+        self.clusters = bestClusters
+
 
     def writeClusterData(self, filename):
         """Export cluster data in the given data output format to the file provided.
