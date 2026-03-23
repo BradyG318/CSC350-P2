@@ -1,6 +1,0 @@
-3c. The number of clusters varies between runs for datasets where clusters overlap or are not clearly separated. 
-  In these cases the clustering algorithm can converge to different solutions depending on the random start of cluster 
-  centers.
-3d. The technique consistently returns the incorrect number of clusters for datasets with non-spherical or irregularly shaped clusters.
-  Since the algorithm assumes compact, spherical clusters of similar size, it fails when clusters are elongated, curved, or have 
-  different densities.
