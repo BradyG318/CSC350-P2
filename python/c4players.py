@@ -69,8 +69,10 @@ class ConnectFourAIPlayer(ConnectFourPlayer):
     Subclass of ConnectFourPlayer that uses Minimax with Alpha-Beta Pruning.
     """
  
-    def __init__(self, model):
+    def __init__(self, model, max_depth = 4):
         self.model = model
+        #Added for Q5
+        self.max_depth = max_depth
  
     def is_automated(self):
         return True
@@ -82,7 +84,10 @@ class ConnectFourAIPlayer(ConnectFourPlayer):
         closest to the center for a slight strategic advantage.
         This will be replaced with alpha_beta_search by a teammate for Q5.
         """
-        state = self.model.get_grid()
+        #state = self.model.get_grid()
+        #Question 5 Alpha-Beta replacement:
+        state = copy.deepcopy(self.model.get_grid())
+
         valid = self.actions(state)
  
         # Pick the valid column closest to center (column 3)
@@ -94,7 +99,9 @@ class ConnectFourAIPlayer(ConnectFourPlayer):
                 best_dist = dist
                 best_col = col
  
-        return best_col
+        #return best_col
+        #Question 5 Alpha-Beta replacement:
+        return self.alpha_beta_search(state)
  
     # ------------------------------------------------------------------
     # Question 2: Terminal Test
@@ -217,18 +224,88 @@ class ConnectFourAIPlayer(ConnectFourPlayer):
  
         return -1
  
-    def utility(self, state):
+    def utility(self, state, my_player):
         """
         Returns the utility of a terminal state.
         +1000 if this player wins, -1000 if the opponent wins, 0 for a draw.
         Uses the model's turn to determine which player this agent is.
         """
         winner = self._get_winner(state)
-        my_player = self.model.get_turn()
+        #Commented for Q6:
+        #my_player = self.model.get_turn()
+        opponent = PLAYER1 if my_player == PLAYER2 else PLAYER2
  
         if winner == my_player:
             return 1000
-        elif winner > 0:
+        elif winner == opponent:
             return -1000
-        else:
+        elif (self._is_draw(state)): #Draw
             return 0
+        
+        score = 0
+
+        #Heuristic function, based on controlling center of board
+        centerCol = 3
+        for r in range(NUMROWS):
+            if (state[centerCol[r] == my_player]):
+                score += 3
+            elif (state[centerCol][row] == opponent):
+                score -= 3
+        
+        #Check every possible 4 piece combination
+        ##Horizontally
+        for r in range(NUMROWS):
+            for c in range(CUMCOLS-3):
+                window = [state[c+i][r] for i in range(4)]
+                score += self._score_window(window, my_player, opponent)
+        ##Vertically
+        for c in range(NUMCOLS):
+            for r in range(NUMROWS-3):
+                window = [state[c][r+i] for i in range(4)]
+                score += self._score_window(window, my_player, opponent)
+        ##Down & Right Diagonal
+        for c in range(3, NUMCOLS):
+            for r in range(NUMROWS-3):
+                window = [state[c+i][r+i] for i in range(4)]
+                score += self._score_window(window, my_player, opponent)
+        ##Up & Right Diagonal
+        for c in range(3, NUMCOLS):
+            for r in range(NUMROWS-3):
+                window = [state[c-i][r+i] for i in range(4)]
+                score += self._score_window(window, my_player, opponent)
+        return score
+                
+
+
+    def _score_window(self, window, my_player, opponent):
+        myCount = window.count(my_player)
+        oppCount = window.count(opponent)
+        emptyCount = window.count(EMPTY)
+
+        # Block mixed windows
+        if myCount > 0 and oppCount > 0:
+            return 0
+
+        # Favor my threats
+        if myCount == 4:
+            return 1000
+        if myCount == 3 and emptyCount == 1:
+            return 50
+        if myCount == 2 and emptyCount == 2:
+            return 10
+        if myCount == 1 and emptyCount == 3:
+            return 1
+
+        # Penalize opponent threats
+        if oppCount == 4:
+            return -1000
+        if oppCount == 3 and emptyCount == 1:
+            return -80
+        if oppCount == 2 and emptyCount == 2:
+            return -12
+        if oppCount == 1 and emptyCount == 3:
+            return -1
+
+        return 0
+        
+
