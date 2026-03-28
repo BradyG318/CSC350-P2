@@ -277,6 +277,7 @@ class ConnectFourAIPlayer(ConnectFourPlayer):
                 
 
 
+    #Helper fnction for utility
     def _score_window(self, window, my_player, opponent):
         myCount = window.count(my_player)
         oppCount = window.count(opponent)
