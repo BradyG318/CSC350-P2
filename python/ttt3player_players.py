@@ -35,39 +35,37 @@ class TTT3PlayerHumanPlayer:
 
         #Question 8:
         state = copy.deepcopy(self.model.get_grid())
-        best_move = None
-        best_vector = None
+        bestMove = None
+        bestVector = None
+        myIndex = self.playerIndex(self.symbol)
 
         for action in self.actions(state):
-            next_state = self.result(state, action)
-            value = self.maxN(next_state, depth=1)
+            nextState = self.result(state, action)
+            valueVector = self.maxN(nextState, depth=1)
 
-            if best_vector is None or value[self._player_index(self.symbol)] > best_vector[self._player_index(self.symbol)]:
-                best_vector = value
-                best_move = action
+            if bestVector is None or valueVector[myIndex] > bestVector[myIndex]:
+                bestVector = valueVector
+                bestMove = action
 
-        return best_move
-
-    #Helper Functions for Q8:
-    def maxN(self, state, depth, max_depth=5):
-        if self.terminal_test(state) or depth >= max_depth:
-            return self._utility_vector(state)
+        return bestMove
+    def maxN(self, state, depth, maxDepth=5):
+        if self.terminal_test(state) or depth >= maxDepth:
+            return self.utilityVector(state)
 
         turn = self._get_turn(state)
-        turn_index = self._player_index(turn)
-
-        best_value = None
+        turnIndex = self.playerIndex(turn)
+        bestVector = None
 
         for action in self.actions(state):
-            child = self.result(state, action)
-            value = self.maxN(child, depth + 1, max_depth)
+            childState = self.result(state, action)
+            valueVector = self.maxN(childState, depth + 1, maxDepth)
 
-            if best_value is None or value[turn_index] > best_value[turn_index]:
-                best_value = value
+            if bestVector is None or valueVector[turnIndex] > bestVector[turnIndex]:
+                bestVector = valueVector
 
-        return best_value
+        return bestVector
 
-    def _utility_vector(self, state):
+    def utilityVector(self, state):
         winner = self._get_winner(state)
 
         if winner == 'X':
@@ -79,55 +77,72 @@ class TTT3PlayerHumanPlayer:
         elif self._is_draw(state):
             return [0, 0, 0]
 
-        # Non-terminal heuristic for cutoff states
-        return self._evaluate_nonterminal(state)
+        return self.evaluateNonTerminal(state)
 
-    def _evaluate_nonterminal(self, state):
+    def evaluateNonTerminal(self, state):
         scores = {'X': 0, 'O': 0, '+': 0}
-
         lines = []
 
         # Horizontal 3-cell lines
         for row in range(4):
-            for startcol in range(2):
-                lines.append([state[row][startcol], state[row][startcol+1], state[row][startcol+2]])
+            for startCol in range(2):
+                lines.append([
+                    state[row][startCol],
+                    state[row][startCol + 1],
+                    state[row][startCol + 2]
+                ])
 
         # Vertical 3-cell lines
         for col in range(4):
-            for startrow in range(2):
-                lines.append([state[startrow][col], state[startrow+1][col], state[startrow+2][col]])
+            for startRow in range(2):
+                lines.append([
+                    state[startRow][col],
+                    state[startRow + 1][col],
+                    state[startRow + 2][col]
+                ])
 
         # Diagonal \ lines
-        for startrow in range(2):
-            for startcol in range(2):
-                lines.append([state[startrow][startcol], state[startrow+1][startcol+1], state[startrow+2][startcol+2]])
+        for startRow in range(2):
+            for startCol in range(2):
+                lines.append([
+                    state[startRow][startCol],
+                    state[startRow + 1][startCol + 1],
+                    state[startRow + 2][startCol + 2]
+                ])
 
         # Diagonal / lines
-        for startrow in range(2, 4):
-            for startcol in range(2):
-                lines.append([state[startrow][startcol], state[startrow-1][startcol+1], state[startrow-2][startcol+2]])
+        for startRow in range(2, 4):
+            for startCol in range(2):
+                lines.append([
+                    state[startRow][startCol],
+                    state[startRow - 1][startCol + 1],
+                    state[startRow - 2][startCol + 2]
+                ])
 
         for line in lines:
             counts = {'X': 0, 'O': 0, '+': 0, None: 0}
             for cell in line:
                 counts[cell] += 1
 
-            players_present = [p for p in ['X', 'O', '+'] if counts[p] > 0]
+            playersPresent = []
+            for player in ['X', 'O', '+']:
+                if counts[player] > 0:
+                    playersPresent.append(player)
 
-            # Ignore blocked lines with multiple players
-            if len(players_present) > 1:
+            # Ignore blocked lines containing more than one player's marks
+            if len(playersPresent) > 1:
                 continue
 
-            # Reward unblocked progress
-            for p in ['X', 'O', '+']:
-                if counts[p] == 2 and counts[None] == 1:
-                    scores[p] += 20
-                elif counts[p] == 1 and counts[None] == 2:
-                    scores[p] += 4
+            for player in ['X', 'O', '+']:
+                if counts[player] == 2 and counts[None] == 1:
+                    scores[player] += 20
+                elif counts[player] == 1 and counts[None] == 2:
+                    scores[player] += 4
 
         return [scores['X'], scores['O'], scores['+']]
 
-    def _player_index(self, player):
+
+    def player_index(self, player):
         if player == 'X':
             return 0
         elif player == 'O':
